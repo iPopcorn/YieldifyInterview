@@ -25,6 +25,8 @@ class Container extends Component {
         this.setState((state) => {
             state.boundaries = boundaries
         });
+
+        console.dir(boundaries);
     }
 
     createBall = (e) => {
