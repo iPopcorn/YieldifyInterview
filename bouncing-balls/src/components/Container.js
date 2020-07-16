@@ -19,7 +19,7 @@ class Container extends Component {
             left: boundingRectangle.left,
             right: boundingRectangle.right - 15,
             top: boundingRectangle.top,
-            bottom: boundingRectangle.bottom
+            bottom: boundingRectangle.bottom - 15
         }
 
         this.setState((state) => {

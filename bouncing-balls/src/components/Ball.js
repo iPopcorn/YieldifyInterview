@@ -3,74 +3,133 @@ import React, {Component} from 'react';
 class Ball extends Component {
     constructor(props) {
         super(props);
-        this.state = {
-            positionX: props.positionX,
-            positionY: props.positionY,
-            boundaries: props.boundaries,
-            movingForward: true,
-            movingUp: true,
-            minimumDistance: 25
-        }
+        this.state = this.setInitialState(props);
     }
 
     componentDidMount() {
-        this.animationID = setInterval(() => this.getPositionQuadratic(), 10);
+        this.animationID = setInterval(() => this.setPosition(), 10);
         console.dir(this.state.boundaries);
     }
 
-    scaleY(rawNumber) {
-        const minY = this.state.boundaries.top;
-        const maxY = this.state.boundaries.bottom;
-        // minPossible = 0;
-        const maxPossible = Math.pow(this.state.boundaries.right, 2);
-
-        return (maxY - minY) * rawNumber / maxPossible + minY;
+    /**
+     * Sets the initial state by randomly choosing the direction and speed.
+     * @param {object} props The props passed in to the constructor of this object.
+     */
+    setInitialState(props) {
+        const horizontalDirectionThreshold = 5;
+        const verticalDirectionThreshold = 5;
+        const initialSpeed = this.setSpeed();
+        
+        return {
+            positionX: props.positionX,
+            positionY: props.positionY,
+            boundaries: props.boundaries,
+            movingForward: (this.getRandom() > horizontalDirectionThreshold) ? true : false,
+            // movingUp: (this.getRandom() > verticalDirectionThreshold) ? true : false,
+            movingUp: true,
+            initialSpeed: initialSpeed,
+            currentSpeed: initialSpeed,
+            distanceTraveled: 0
+        }
     }
 
-    switchDirectionVertical() {
-        const threshold = 9;
-        const switchFactor = Math.floor((Math.random() * 10) + 1); // get a number between 1 and 10
+    /**
+     * Helper method for randomly choosing speed and direction. Returns a number between 1 and 10 inclusive.
+     */
+    getRandom() {
+        return Math.floor((Math.random() * 10) + 1);
+    }
 
-        // randomly switch direction at a certain threshold
-        return (switchFactor > threshold) ? !this.state.movingUp : this.state.movingUp;
+    /**
+     * Sets the speed based on a random number.
+     */
+    setSpeed() {
+        const speedChoice = this.getRandom();
+        const slow = 3;
+        const medium = 6;
+        const fast = 9;
+        
+        if (speedChoice < 4) {
+            return slow;
+        } else if (speedChoice < 7) {
+            return medium;
+        } else {
+            return fast;
+        }
+    }
+
+    /**
+     * Sets a new speed based on the distance traveled and the current direction. Returns a number that represents 
+     * the new speed.
+     * @param {object} state The current state of the ball
+     */
+    updateSpeed(state) {
+        let newSpeed;
+
+        // Slow down if moving up, otherwise speed up
+        (state.movingUp) ? newSpeed = state.currentSpeed - 1 : newSpeed = state.currentSpeed + 1;
+
+        return newSpeed;
     }
     
-    getPositionQuadratic() {
+    /**
+     * Calculates the new position of the ball on each tick. Copies the current state object and sets new values relating to 
+     * position, speed, and distance. Finally, calls setState() with the new state object which triggers react to render the ball again.
+     */
+    setPosition() {
         let newState = {...this.state}
-        let newPositionX = this.state.positionX + 1;
+        let newPositionX = (this.state.movingForward) ? this.state.positionX + 1 : this.state.positionX - 1;
         let newPositionY = this.state.positionY;
 
-        if (this.state.movingUp) {
-            newPositionY -= 2;
-
-            // randomly switch direction after a minimum distance has been traveled
-            (newState.minimumDistance > 0) ? newState.minimumDistance -= 1 : newState.movingUp = this.switchDirectionVertical();
-        } else {
-            newPositionY += 4;
-        }
-
-        // let newPositionY = (this.state.movingUp) ? this.state.positionY - 2 : this.state.positionY + 4;
-        // let newPositionY = this.scaleY(2 * (Math.pow(this.state.positionX, 2)));  // Apply simple -x^2 function and scale it
+        (this.state.movingUp) ? newPositionY -= this.state.currentSpeed : newPositionY += this.state.currentSpeed;
 
         newState.positionX = newPositionX;
         newState.positionY = newPositionY;
+        newState.distanceTraveled += 1;
 
-        // console.log(`x: ${newPositionX}, y: ${newPositionY}`);
+        if(newState.distanceTraveled % 5 === 0) {
+            newState.currentSpeed = this.updateSpeed(newState);
+
+            if(newState.currentSpeed === 0) {
+                newState.movingUp = !newState.movingUp;
+            }
+        }
+
+        newState = this.handleBoundaries(newState);
 
         this.setState(newState);
     }
 
-    getPositionHorizontal() {
-        let newState = {...this.state}
-        let newPositionX = (this.state.movingForward) ? this.state.positionX + 5 : this.state.positionX - 5;
+    /**
+     * Checks if the ball is at any of the container boundaries. Switches the direction and calculates a new speed if so.
+     */
+    handleBoundaries(state) {
+        // The minimum speed to calculate a bounce for. Using a lower threshold causes the ball to bounce forever.
+        const speedThreshold = 4;
+        let newState = {...state};
 
-        if (newPositionX >= this.state.boundaries.right || newPositionX <= this.state.boundaries.left) {
-            newState.movingForward = !this.state.movingForward;
+        if(state.positionX >= state.boundaries.right || state.positionX <= state.boundaries.left) {
+            newState.movingForward = !state.movingForward;
         }
 
-        newState.positionX = newPositionX;
+        if(state.positionY <= state.boundaries.top) {
+            newState.movingUp = !state.movingUp;
+        } else if(state.positionY >= state.boundaries.bottom) {
+            // Set position just inside of the boundary so that the method doesn't get called again in case the position was outside of the boundary
+            newState.positionY = state.boundaries.bottom - 1;
+            
+            if(Math.abs(state.currentSpeed) >= speedThreshold) {
+                newState.movingUp = !state.movingUp;
 
-        this.setState(newState);
+                // Reduce the speed by about 50% until the speed threshold is hit, then reduce the speed to 0
+                newState.currentSpeed = state.currentSpeed - Math.floor(state.currentSpeed / 2);
+            } else {
+                newState.movingUp = false;
+                newState.currentSpeed = 0;
+            }
+        }
+
+        return newState;
     }
     
     render() {
