@@ -1,3 +1,7 @@
+/**
+ * This class is responsible for everything related to animating the balls.
+ * Each ball animates itself by leveraging the event loop to call a setPosition() method on a set interval.
+ */
 import React, {Component} from 'react';
 
 class Ball extends Component {
@@ -8,11 +12,17 @@ class Ball extends Component {
         this.mounted = false;
     }
 
+    /**
+     * React lifecycle method. This method begins the animation by calling setPosition() on a given interval.
+     */
     componentDidMount() {
         this.mounted = true;
-        this.animationID = setInterval(() => this.setPosition(), 16);
+        this.animationID = setInterval(() => this.setPosition(), 17);  // 17ms interval to approximate a 60fps animation
     }
 
+    /**
+     * React lifecycle method. This method releases the setPosition() call.
+     */
     componentWillUnmount() {
         this.mounted = false;
         clearInterval(this.animationID);
@@ -23,6 +33,11 @@ class Ball extends Component {
      * @param {object} props The props passed in to the constructor of this object.
      */
     setInitialState(props) {
+        /**
+         * Changing these values affect how often a ball starts moving in a given direction.
+         * Lower horizontalDirectionThreshold means the ball will start by moving to the right more often than not.
+         * Lower verticalDirectionThreshold means the ball will start by moving up more often than not.
+         */
         const horizontalDirectionThreshold = 5;
         const verticalDirectionThreshold = 5;
         
@@ -65,8 +80,7 @@ class Ball extends Component {
     }
 
     /**
-     * Sets a new speed based on the distance traveled and the current direction. Returns a number that represents 
-     * the new speed.
+     * Sets a new speed based on the current direction. Returns a number that represents the new speed.
      * @param {object} state The current state of the ball
      */
     updateSpeedY(state) {
@@ -84,13 +98,21 @@ class Ball extends Component {
      * @param {object} state The current state of the ball
      */
     updateSpeedX(state) {
-        const speedYThreshold = 2;
+        const speedYThreshold = 2;  // Even when the ball is rolling at the bottom, sometimes it has a Y speed of 1.
+        
+        /**
+         * How far the ball should roll before changing the speed.
+         * The higher this number, the longer the ball will roll before stopping.
+         */
+        const travelDistanceThreshold = 20;
+
         if(
             this.isAtBottom(state) && 
             !state.movingUp && 
             state.currentSpeedY < speedYThreshold && 
             state.currentSpeedX > 0 && 
-            state.distanceTraveled % 20 === 0) {
+            state.distanceTraveled % travelDistanceThreshold === 0) {
+            
             return state.currentSpeedX - 1;
         } else {
             return state.currentSpeedX;
@@ -98,7 +120,7 @@ class Ball extends Component {
     }
     
     /**
-     * Calculates the new position of the ball on each tick. Copies the current state object and sets new values relating to 
+     * Calculates the new position of the ball on each interval. Copies the current state object and sets new values relating to 
      * position, speed, and distance. Finally, calls setState() with the new state object which triggers react to render the ball again.
      */
     setPosition() {
@@ -106,18 +128,23 @@ class Ball extends Component {
         let newPositionX = this.state.positionX;
         let newPositionY = this.state.positionY;
 
+        /**
+         * Use the speed to determine how much the position should change.
+         * Evaluate the direction to determine if the change should be positive or negative.
+         * The signs for the Y position are counterintuitive because the smaller Y coordinates are near the top of the screen.
+         */
         (this.state.movingForward) ? newPositionX += this.state.currentSpeedX : newPositionX -= this.state.currentSpeedX;
         (this.state.movingUp) ? newPositionY -= this.state.currentSpeedY : newPositionY += this.state.currentSpeedY;
 
         newState.positionX = newPositionX;
         newState.positionY = newPositionY;
-        newState.distanceTraveled += 1;
+        newState.distanceTraveled += 1;  // distanceTraveled determines when the speed is updated
 
-        if(newState.distanceTraveled % 5 === 0) {
+        if(newState.distanceTraveled % 5 === 0) {  // update the speed every 5 iterations
             newState.currentSpeedY = this.updateSpeedY(newState);
             newState.currentSpeedX = this.updateSpeedX(newState);
 
-            if(newState.currentSpeedY === 0 && !this.isAtBottom(newState)) {
+            if(newState.currentSpeedY === 0 && !this.isAtBottom(newState)) {  // At the height of the curve, change the direction
                 newState.movingUp = !newState.movingUp;
             }
         }
@@ -125,7 +152,7 @@ class Ball extends Component {
         newState = this.handleBoundaries(newState);
         newState.isMoving = this.isMoving(newState);
 
-        if(!newState.isMoving) {
+        if(!newState.isMoving) {  // Remove the ball from the app once it stops moving
             this.props.removeBall(this.key);
         }
 
@@ -161,8 +188,15 @@ class Ball extends Component {
         const speedThreshold = 4;
         let newState = {...state};
 
-        if(state.positionX >= state.boundaries.right || state.positionX <= state.boundaries.left) {
+        if(state.positionX >= state.boundaries.right || state.positionX <= state.boundaries.left) {  // Reverse the direction if the ball is at a boundary
             newState.movingForward = !state.movingForward;
+
+            // Fix for the edge case where the ball can vibrate around the boundary
+            if(state.positionX >= state.boundaries.right) {
+                newState.positionX = state.boundaries.right - 1;
+            } else if(state.positionX <= state.boundaries.left) {
+                newState.positionX = state.boundaries.left + 1;
+            }
         }
 
         if(state.positionY <= state.boundaries.top) {
@@ -189,6 +223,11 @@ class Ball extends Component {
         return newState;
     }
     
+    /**
+     * React lifecycle method. This method shows the ball on the screen. It is called when the ball is instantiated, 
+     * and also anytime the state is updated. The animation works because the state is constantly updated with new positions,
+     * and the positions are used in the css rules.
+     */
     render() {
         let myStyle = {
             borderStyle: "solid",
