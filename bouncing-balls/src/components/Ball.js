@@ -4,14 +4,17 @@ class Ball extends Component {
     constructor(props) {
         super(props);
         this.state = this.setInitialState(props);
+        this.key = props.ballKey;
+        this.mounted = false;
     }
 
     componentDidMount() {
-        this.animationID = setInterval(() => this.setPosition(), 10);
-        console.dir(this.state.boundaries);
+        this.mounted = true;
+        this.animationID = setInterval(() => this.setPosition(), 16);
     }
 
     componentWillUnmount() {
+        this.mounted = false;
         clearInterval(this.animationID);
     }
 
@@ -81,9 +84,6 @@ class Ball extends Component {
      * @param {object} state The current state of the ball
      */
     updateSpeedX(state) {
-        // console.log(`Ball is at bottom? ${this.isAtBottom(state)}`);
-        // console.log(`Ball is moving up? ${state.movingUp}`);
-        // console.log(`Ball speed Y: ${state.currentSpeedY}`);
         const speedYThreshold = 2;
         if(
             this.isAtBottom(state) && 
@@ -125,7 +125,13 @@ class Ball extends Component {
         newState = this.handleBoundaries(newState);
         newState.isMoving = this.isMoving(newState);
 
-        this.setState(newState);
+        if(!newState.isMoving) {
+            this.props.removeBall(this.key);
+        }
+
+        if(this.mounted) {  // Don't attempt to set state after ball has unmounted, this fixes the memory leak warning.
+            this.setState(newState);
+        }
     }
 
     /**

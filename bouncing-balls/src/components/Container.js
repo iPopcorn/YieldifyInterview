@@ -10,6 +10,7 @@ class Container extends Component {
             boundaries: {}
         }
         this.containerRef = React.createRef();
+        this.removeBall = this.removeBall.bind(this);
     }
 
     componentDidMount() {
@@ -31,12 +32,15 @@ class Container extends Component {
 
     createBall = (e) => {
         e.persist();
+        const myKey = `ball_${this.state.count}`
         
         let newBall = [{
-            key: `ball_${this.state.count}`,
+            key: myKey,
+            ballKey: myKey,  // key is a special prop which is not accesible in the child
             positionX: e.pageX,
             positionY: e.pageY,
-            boundaries: this.state.boundaries
+            boundaries: this.state.boundaries,
+            removeBall: this.removeBall
         }];
         
         let newBalls = [...this.state.balls, ...newBall]
@@ -46,6 +50,16 @@ class Container extends Component {
         }
         
         this.setState(newState);
+    }
+
+    /**
+     * Removes the ball based on the key
+     * @param {string} key The key of the ball to remove
+     */
+    removeBall(key) {
+        let newBalls = this.state.balls.filter((ball) => {return ball.key !== key; });
+
+        this.setState({balls: newBalls});
     }
     
     render() {
