@@ -108,7 +108,8 @@ class Container extends Component {
                  * Bind the containerRef object created earlier to this DOM element.
                  * This allows me to get the size of the <div> using getBoundingClientRect().
                  */
-                ref={this.containerRef}>  
+                ref={this.containerRef}
+                data-testid="myContainer">  
                 {
                     /**
                      * Create a Ball component for each element in balls array in the state.
