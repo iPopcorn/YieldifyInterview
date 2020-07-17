@@ -1,3 +1,8 @@
+/**
+ * This suite tests the main responsibility of the Container component. That is, to create balls when the
+ * user clicks within the component. It tests that a single ball is created, and also that multiple balls are
+ * created.
+ */
 import React from 'react';
 import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
