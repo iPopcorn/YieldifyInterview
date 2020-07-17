@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/YieldifyInterview/static/css/main.2fa4e22b.chunk.css",
+    "main.js": "/YieldifyInterview/static/js/main.076baa68.chunk.js",
+    "main.js.map": "/YieldifyInterview/static/js/main.076baa68.chunk.js.map",
+    "runtime-main.js": "/YieldifyInterview/static/js/runtime-main.1d819a22.js",
+    "runtime-main.js.map": "/YieldifyInterview/static/js/runtime-main.1d819a22.js.map",
+    "static/js/2.ad006613.chunk.js": "/YieldifyInterview/static/js/2.ad006613.chunk.js",
+    "static/js/2.ad006613.chunk.js.map": "/YieldifyInterview/static/js/2.ad006613.chunk.js.map",
+    "index.html": "/YieldifyInterview/index.html",
+    "precache-manifest.174b7e0c40327342f134e0b224efc2e0.js": "/YieldifyInterview/precache-manifest.174b7e0c40327342f134e0b224efc2e0.js",
+    "service-worker.js": "/YieldifyInterview/service-worker.js",
+    "static/css/main.2fa4e22b.chunk.css.map": "/YieldifyInterview/static/css/main.2fa4e22b.chunk.css.map",
+    "static/js/2.ad006613.chunk.js.LICENSE.txt": "/YieldifyInterview/static/js/2.ad006613.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.1d819a22.js",
+    "static/js/2.ad006613.chunk.js",
+    "static/css/main.2fa4e22b.chunk.css",
+    "static/js/main.076baa68.chunk.js"
+  ]
+}
